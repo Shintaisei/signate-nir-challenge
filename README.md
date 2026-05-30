@@ -59,9 +59,10 @@ python run.py candidate_linear_1f --cv group_species
 |----|-------------|------|
 | 1 | 本 README | セットアップ・日常コマンド |
 | 2 | [docs/TEAM_ONBOARDING.md](docs/TEAM_ONBOARDING.md) | 構成図・データフロー・用語 |
-| 3 | [docs/NEXT_ACTIONS.md](docs/NEXT_ACTIONS.md) | **いまの方針・Public 実績** |
-| 4 | [docs/EDA_REPORT.md](docs/EDA_REPORT.md) | EDA 結論 |
-| 5 | [docs/STRATEGY_V2.md](docs/STRATEGY_V2.md) | 仮説・評価プロトコル |
+| 3 | **[docs/RETROSPECTIVE_2026-05-30.md](docs/RETROSPECTIVE_2026-05-30.md)** | **データの性質・振り返り・戦略の種（必読）** |
+| 4 | [docs/NEXT_ACTIONS.md](docs/NEXT_ACTIONS.md) | いまの方針・Public 実績 |
+| 5 | [docs/EDA_REPORT.md](docs/EDA_REPORT.md) | EDA 数値詳細 |
+| 6 | [docs/STRATEGY_V2.md](docs/STRATEGY_V2.md) | 仮説・評価プロトコル |
 
 ---
 

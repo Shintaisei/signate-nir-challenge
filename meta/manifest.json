@@ -1,0 +1,29 @@
+{
+  "competition_key": "37308d147238487c96551300b8e4cb76",
+  "tasks": [
+    {
+      "task_key": "8940dcfa70434a6aaaa28d661652d536",
+      "task_name": "木材含水率予測",
+      "files": [
+        {
+          "file_key": "d1edef347a9c48839a97ba92084ce045",
+          "file_name": "train.csv",
+          "title": "学習用データ",
+          "local_path": "/Users/komatsuzakiharutoshi/Desktop/金融AI/data/近赤外研究会/木材含水率予測/train.csv"
+        },
+        {
+          "file_key": "68b2ee0219334457873c7d2ee1028c7a",
+          "file_name": "test.csv",
+          "title": "評価用データ",
+          "local_path": "/Users/komatsuzakiharutoshi/Desktop/金融AI/data/近赤外研究会/木材含水率予測/test.csv"
+        },
+        {
+          "file_key": "c4246245c6834758980910e4bdd99052",
+          "file_name": "sample_submit.csv",
+          "title": "サンプル投稿ファイル",
+          "local_path": "/Users/komatsuzakiharutoshi/Desktop/金融AI/data/近赤外研究会/木材含水率予測/sample_submit.csv"
+        }
+      ]
+    }
+  ]
+}

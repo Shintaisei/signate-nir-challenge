@@ -116,6 +116,91 @@ class SingleFeatureFixedIndexPredictor:
         return [self._intercept + self._slope * row[self._feature_idx] for row in X]
 
 
+class SingleFeatureFixedIndex614Predictor(SingleFeatureFixedIndexPredictor):
+    name = "single_feature_fixed_index_614"
+
+    def __init__(self) -> None:
+        super().__init__(feature_idx=614)
+
+
+class SingleFeatureFixedIndex615Predictor(SingleFeatureFixedIndexPredictor):
+    name = "single_feature_fixed_index_615"
+
+    def __init__(self) -> None:
+        super().__init__(feature_idx=615)
+
+
+class SingleFeatureFixedIndex617Predictor(SingleFeatureFixedIndexPredictor):
+    name = "single_feature_fixed_index_617"
+
+    def __init__(self) -> None:
+        super().__init__(feature_idx=617)
+
+
+class SingleFeatureFixedIndex618Predictor(SingleFeatureFixedIndexPredictor):
+    name = "single_feature_fixed_index_618"
+
+    def __init__(self) -> None:
+        super().__init__(feature_idx=618)
+
+
+class SingleFeatureIndex616WindowMeanPredictor:
+    """raw index 615-617 mean as a 1D feature."""
+
+    name = "single_feature_index616_window_mean"
+
+    def __init__(self) -> None:
+        self._slope: float = 0.0
+        self._intercept: float = 0.0
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        x_mean3 = [(row[615] + row[616] + row[617]) / 3.0 for row in X]
+        self._slope, self._intercept = _fit_1d_linear(x_mean3, y)
+
+    def predict(self, X: Matrix) -> Vector:
+        return [self._intercept + self._slope * ((row[615] + row[616] + row[617]) / 3.0) for row in X]
+
+
+class SingleFeatureIndex616WindowMedianPredictor:
+    """raw index 615-617 median as a 1D feature."""
+
+    name = "single_feature_index616_window_median"
+
+    def __init__(self) -> None:
+        self._slope: float = 0.0
+        self._intercept: float = 0.0
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        x_median3 = [_median3(row[615], row[616], row[617]) for row in X]
+        self._slope, self._intercept = _fit_1d_linear(x_median3, y)
+
+    def predict(self, X: Matrix) -> Vector:
+        return [self._intercept + self._slope * _median3(row[615], row[616], row[617]) for row in X]
+
+
+class SingleFeatureIndex616PredictionMedianPredictor:
+    """median of fixed-index predictions for raw 615/616/617."""
+
+    name = "single_feature_index616_prediction_median"
+
+    def __init__(self) -> None:
+        self._models: list[tuple[int, float, float]] = []
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        self._models = []
+        for idx in (615, 616, 617):
+            x_col = [row[idx] for row in X]
+            slope, intercept = _fit_1d_linear(x_col, y)
+            self._models.append((idx, slope, intercept))
+
+    def predict(self, X: Matrix) -> Vector:
+        out: Vector = []
+        for row in X:
+            values = [intercept + slope * row[idx] for idx, slope, intercept in self._models]
+            out.append(_median3(values[0], values[1], values[2]))
+        return out
+
+
 def _fit_1d_linear(x: Vector, y: Vector) -> tuple[float, float]:
     """OLS slope/intercept（`SingleFeatureLinearPredictor` と同じ SS 定義）。"""
     n = len(y)
@@ -365,6 +450,64 @@ class DualPrepAnchorRawBlendPredictor:
 
     def predict(self, X: Matrix) -> Vector:
         raise RuntimeError("predict_test() を使用してください")
+
+
+class AntiSnv25PredictionBlendPredictor:
+    """Prediction-space reverse blend from the known-bad SNV25 direction."""
+
+    name = "anti_snv25_prediction_blend"
+    blend_weight = -0.25
+
+    def __init__(self) -> None:
+        self._raw_model = SingleFeatureLinearPredictor()
+        self._snv25_model = SingleFeatureLinearPredictor()
+        self._prep_raw = None
+        self._prep_snv25 = None
+        self._train_rows = None
+        self._config = None
+
+    def set_train_context(self, train_rows, config) -> None:
+        self._train_rows = train_rows
+        self._config = config
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        if self._train_rows is None or self._config is None:
+            raise RuntimeError("set_train_context() must be called before fit")
+        from pipeline.preprocessors import get_preprocessor
+
+        self._prep_raw = get_preprocessor("spectral")
+        self._prep_snv25 = get_preprocessor("spectral_blend_snv25")
+        meta = self._config.meta_cols
+        target = self._config.target_col
+        self._prep_raw.fit(self._train_rows, target_col=target, meta_cols=meta)
+        self._prep_snv25.fit(self._train_rows, target_col=target, meta_cols=meta)
+        X_raw, y_raw = self._prep_raw.transform_train(self._train_rows)
+        X_snv25, _ = self._prep_snv25.transform_train(self._train_rows)
+        self._raw_model.fit(X_raw, y_raw)
+        self._snv25_model.fit(X_snv25, y_raw)
+
+    def predict_test(self, test_rows) -> Vector:
+        if self._prep_raw is None or self._prep_snv25 is None:
+            raise RuntimeError("fit() must be called before predict_test")
+        X_raw = self._prep_raw.transform_test(test_rows)
+        X_snv25 = self._prep_snv25.transform_test(test_rows)
+        pred_raw = self._raw_model.predict(X_raw)
+        pred_snv25 = self._snv25_model.predict(X_snv25)
+        w = self.blend_weight
+        return [raw + w * (snv - raw) for raw, snv in zip(pred_raw, pred_snv25)]
+
+    def predict(self, X: Matrix) -> Vector:
+        raise RuntimeError("use predict_test(test_rows)")
+
+
+class AntiSnv25PredictionBlendWm025Predictor(AntiSnv25PredictionBlendPredictor):
+    name = "anti_snv25_prediction_blend_wm025"
+    blend_weight = -0.25
+
+
+class AntiSnv25PredictionBlendWm050Predictor(AntiSnv25PredictionBlendPredictor):
+    name = "anti_snv25_prediction_blend_wm050"
+    blend_weight = -0.50
 
 
 class SingleFeatureTop3MedianPredictor:
@@ -833,3 +976,13 @@ def _quantile(values: Vector, q: float) -> float:
         return sorted_values[lo]
     weight = pos - lo
     return sorted_values[lo] * (1.0 - weight) + sorted_values[hi] * weight
+
+
+def _median3(a: float, b: float, c: float) -> float:
+    if a > b:
+        a, b = b, a
+    if b > c:
+        b, c = c, b
+    if a > b:
+        a, b = b, a
+    return b

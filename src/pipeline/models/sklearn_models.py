@@ -226,6 +226,290 @@ class PlsC16Predictor(SklearnPredictor):
         return make_pipeline(StandardScaler(), PLSRegression(n_components=16))
 
 
+class BandWindowPlsC2Predictor:
+    name = "band_window_pls_c2"
+
+    center_idx: int = 616
+    radius: int = 5
+
+    def __init__(self, *, center_idx: int | None = None, radius: int | None = None) -> None:
+        self.center_idx = self.center_idx if center_idx is None else center_idx
+        self.radius = self.radius if radius is None else radius
+        self._model = None
+        self._start = 0
+        self._end = 0
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        _require_sklearn()
+        from sklearn.cross_decomposition import PLSRegression
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        n_features = len(X[0]) if X else 0
+        self._start = max(0, self.center_idx - self.radius)
+        self._end = min(n_features, self.center_idx + self.radius + 1)
+        if self._end - self._start < 2:
+            raise ValueError("BandWindowPlsC2Predictor requires at least 2 features")
+        X_band = self._slice(X)
+        self._model = make_pipeline(StandardScaler(), PLSRegression(n_components=2))
+        self._model.fit(X_band, y)
+
+    def predict(self, X: Matrix) -> Vector:
+        if self._model is None:
+            raise RuntimeError("fit() must be called before predict()")
+        pred = self._model.predict(self._slice(X))
+        return [float(value) for value in _flatten(pred)]
+
+    def _slice(self, X: Matrix) -> Matrix:
+        return [row[self._start : self._end] for row in X]
+
+
+class Band616PlsC2Radius2Predictor(BandWindowPlsC2Predictor):
+    name = "band616_pls_c2_r2"
+    radius = 2
+
+
+class Band616PlsC2Radius3Predictor(BandWindowPlsC2Predictor):
+    name = "band616_pls_c2_r3"
+    radius = 3
+
+
+class Band616PlsC2Radius5Predictor(BandWindowPlsC2Predictor):
+    name = "band616_pls_c2_r5"
+    radius = 5
+
+
+class Band616PlsC2Radius8Predictor(BandWindowPlsC2Predictor):
+    name = "band616_pls_c2_r8"
+    radius = 8
+
+
+class Band616PlsC2Radius10Predictor(BandWindowPlsC2Predictor):
+    name = "band616_pls_c2_r10"
+    radius = 10
+
+
+class Band616PlsC2MeanAlignPredictor(BandWindowPlsC2Predictor):
+    name = "band616_pls_c2_mean_align"
+
+    align_weight: float = 0.10
+
+    def __init__(self, *, align_weight: float | None = None) -> None:
+        super().__init__(radius=5)
+        self.align_weight = self.align_weight if align_weight is None else align_weight
+        self._train_band_mean: list[float] = []
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        super().fit(X, y)
+        self._train_band_mean = _column_means(self._slice(X))
+
+    def predict(self, X: Matrix) -> Vector:
+        if self._model is None:
+            raise RuntimeError("fit() must be called before predict()")
+        X_band = self._slice(X)
+        X_aligned = self._mean_align(X_band)
+        pred = self._model.predict(X_aligned)
+        return [float(value) for value in _flatten(pred)]
+
+    def _mean_align(self, X_band: Matrix) -> Matrix:
+        if not X_band or not self._train_band_mean:
+            return X_band
+        target_mean = _column_means(X_band)
+        shifts = [
+            self.align_weight * (target_mean[j] - self._train_band_mean[j])
+            for j in range(len(self._train_band_mean))
+        ]
+        return [[value - shifts[j] for j, value in enumerate(row)] for row in X_band]
+
+
+class Band616PlsC2MeanAlignL010Predictor(Band616PlsC2MeanAlignPredictor):
+    name = "band616_pls_c2_mean_align_l010"
+    align_weight = 0.10
+
+
+class Band616PlsC2MeanAlignL020Predictor(Band616PlsC2MeanAlignPredictor):
+    name = "band616_pls_c2_mean_align_l020"
+    align_weight = 0.20
+
+
+class Band616PlsC2OofAffinePredictor:
+    name = "band616_pls_c2_oof_affine"
+
+    shrink: float = 0.10
+
+    def __init__(self, *, shrink: float | None = None) -> None:
+        self.shrink = self.shrink if shrink is None else shrink
+        self._group_labels: list[str] | None = None
+        self._anchor = Band616PlsC2Radius5Predictor()
+        self._scale = 1.0
+        self._shift = 0.0
+
+    def set_group_labels(self, labels: list[str]) -> None:
+        self._group_labels = labels
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        if self._group_labels is None or len(self._group_labels) != len(y):
+            raise RuntimeError("set_group_labels() must be called before fit()")
+
+        oof_pred: list[float] = []
+        oof_true: list[float] = []
+        for group in sorted(set(self._group_labels)):
+            train_idx = [i for i, label in enumerate(self._group_labels) if label != group]
+            valid_idx = [i for i, label in enumerate(self._group_labels) if label == group]
+            if len(train_idx) < 3 or not valid_idx:
+                continue
+            model = Band616PlsC2Radius5Predictor()
+            model.fit([X[i] for i in train_idx], [y[i] for i in train_idx])
+            pred = model.predict([X[i] for i in valid_idx])
+            oof_pred.extend(pred)
+            oof_true.extend(y[i] for i in valid_idx)
+
+        self._scale, self._shift = _shrunk_affine(oof_pred, oof_true, self.shrink)
+        self._anchor.fit(X, y)
+
+    def predict(self, X: Matrix) -> Vector:
+        pred = self._anchor.predict(X)
+        return [float(self._scale * value + self._shift) for value in pred]
+
+
+class Band616PlsC2OofAffineL010Predictor(Band616PlsC2OofAffinePredictor):
+    name = "band616_pls_c2_oof_affine_l010"
+    shrink = 0.10
+
+
+class Band616PlsC2OofBiasPredictor(Band616PlsC2OofAffinePredictor):
+    name = "band616_pls_c2_oof_bias"
+
+    shrink: float = 0.05
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        if self._group_labels is None or len(self._group_labels) != len(y):
+            raise RuntimeError("set_group_labels() must be called before fit()")
+
+        residuals: list[float] = []
+        for group in sorted(set(self._group_labels)):
+            train_idx = [i for i, label in enumerate(self._group_labels) if label != group]
+            valid_idx = [i for i, label in enumerate(self._group_labels) if label == group]
+            if len(train_idx) < 3 or not valid_idx:
+                continue
+            model = Band616PlsC2Radius5Predictor()
+            model.fit([X[i] for i in train_idx], [y[i] for i in train_idx])
+            pred = model.predict([X[i] for i in valid_idx])
+            residuals.extend(y[i] - value for i, value in zip(valid_idx, pred))
+
+        raw_shift = sum(residuals) / len(residuals) if residuals else 0.0
+        self._scale = 1.0
+        self._shift = self.shrink * raw_shift
+        self._anchor.fit(X, y)
+
+
+class Band616PlsC2OofBiasL005Predictor(Band616PlsC2OofBiasPredictor):
+    name = "band616_pls_c2_oof_bias_l005"
+    shrink = 0.05
+
+
+class Band616PlsC2SmoothAnchorBlendPredictor:
+    name = "band616_pls_c2_smooth_anchor_blend"
+
+    target_radius: int = 8
+    weight: float = 0.1
+
+    def __init__(
+        self,
+        *,
+        target_radius: int | None = None,
+        weight: float | None = None,
+    ) -> None:
+        self.target_radius = self.target_radius if target_radius is None else target_radius
+        self.weight = self.weight if weight is None else weight
+        self._anchor = Band616PlsC2Radius5Predictor()
+        self._target = BandWindowPlsC2Predictor(radius=self.target_radius)
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        self._anchor.fit(X, y)
+        self._target.fit(X, y)
+
+    def predict(self, X: Matrix) -> Vector:
+        anchor_pred = self._anchor.predict(X)
+        target_pred = self._target.predict(X)
+        w = self.weight
+        return [float(anchor + w * (target - anchor)) for anchor, target in zip(anchor_pred, target_pred)]
+
+
+class Band616R8BlendW005Predictor(Band616PlsC2SmoothAnchorBlendPredictor):
+    name = "band616_r8_blend_w005"
+    target_radius = 8
+    weight = 0.05
+
+
+class Band616R8BlendW010Predictor(Band616PlsC2SmoothAnchorBlendPredictor):
+    name = "band616_r8_blend_w010"
+    target_radius = 8
+    weight = 0.10
+
+
+class Band616R8BlendW015Predictor(Band616PlsC2SmoothAnchorBlendPredictor):
+    name = "band616_r8_blend_w015"
+    target_radius = 8
+    weight = 0.15
+
+
+class Band616R8BlendW020Predictor(Band616PlsC2SmoothAnchorBlendPredictor):
+    name = "band616_r8_blend_w020"
+    target_radius = 8
+    weight = 0.20
+
+
+class Band616R10BlendW003Predictor(Band616PlsC2SmoothAnchorBlendPredictor):
+    name = "band616_r10_blend_w003"
+    target_radius = 10
+    weight = 0.03
+
+
+class Band616R10BlendW005Predictor(Band616PlsC2SmoothAnchorBlendPredictor):
+    name = "band616_r10_blend_w005"
+    target_radius = 10
+    weight = 0.05
+
+
+class Band616R10BlendW0075Predictor(Band616PlsC2SmoothAnchorBlendPredictor):
+    name = "band616_r10_blend_w0075"
+    target_radius = 10
+    weight = 0.075
+
+
+class Band616R10BlendW010Predictor(Band616PlsC2SmoothAnchorBlendPredictor):
+    name = "band616_r10_blend_w010"
+    target_radius = 10
+    weight = 0.10
+
+
+def _shrunk_affine(pred: Vector, true: Vector, shrink: float) -> tuple[float, float]:
+    if len(pred) < 2 or len(pred) != len(true):
+        return 1.0, 0.0
+    pred_mean = sum(pred) / len(pred)
+    true_mean = sum(true) / len(true)
+    pred_var = sum((value - pred_mean) ** 2 for value in pred)
+    if pred_var <= 1e-12:
+        raw_scale = 1.0
+        raw_shift = true_mean - pred_mean
+    else:
+        cov = sum((pred[i] - pred_mean) * (true[i] - true_mean) for i in range(len(pred)))
+        raw_scale = cov / pred_var
+        raw_shift = true_mean - raw_scale * pred_mean
+    scale = 1.0 + shrink * (raw_scale - 1.0)
+    shift = shrink * raw_shift
+    return float(scale), float(shift)
+
+
+def _column_means(X: Matrix) -> list[float]:
+    if not X:
+        return []
+    n = len(X)
+    n_features = len(X[0])
+    return [sum(row[j] for row in X) / n for j in range(n_features)]
+
+
 def _flatten(values) -> list[float]:
     if hasattr(values, "ravel"):
         return [float(value) for value in values.ravel()]

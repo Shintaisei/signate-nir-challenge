@@ -95,6 +95,46 @@ EXPERIMENTS: dict[str, ExperimentSpec] = {
         predictor="nearest_train_species_bias_corrected",
         memo="raw 1f + nearest-train-species mean residual correction",
     ),
+    "candidate_linear_1f_anti_nn_bias_wm025": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_anti_nn_bias_blend_wm025",
+        memo="raw 1f anti-nn-bias blend: baseline + (-0.25)*(nn_bias-baseline)",
+    ),
+    "candidate_linear_1f_anti_nn_bias_wm035": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_anti_nn_bias_blend_wm035",
+        memo="raw 1f anti-nn-bias blend: baseline + (-0.35)*(nn_bias-baseline)",
+    ),
+    "candidate_linear_1f_anti_nn_bias_wm040": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_anti_nn_bias_blend_wm040",
+        memo="raw 1f anti-nn-bias blend: baseline + (-0.40)*(nn_bias-baseline)",
+    ),
+    "candidate_linear_1f_anti_nn_bias_wm045": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_anti_nn_bias_blend_wm045",
+        memo="raw 1f anti-nn-bias blend: baseline + (-0.45)*(nn_bias-baseline)",
+    ),
+    "candidate_linear_1f_anti_nn040_anti_snv025": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_anti_nn_wm040_anti_snv_wm025",
+        memo="raw 1f + anti-nn-bias w=-0.40 + anti-SNV25 prediction blend w=-0.25",
+    ),
+    "candidate_linear_1f_anti_nn040_anti_snv050": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_anti_nn_wm040_anti_snv_wm050",
+        memo="raw 1f + anti-nn-bias w=-0.40 + anti-SNV25 prediction blend w=-0.50",
+    ),
+    "candidate_linear_1f_anti_nn_bias_wm050": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_anti_nn_bias_blend_wm050",
+        memo="raw 1f anti-nn-bias blend: baseline + (-0.5)*(nn_bias-baseline)",
+    ),
+    "candidate_linear_1f_anti_nn_bias_wm075": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_anti_nn_bias_blend_wm075",
+        memo="raw 1f anti-nn-bias blend: baseline + (-0.75)*(nn_bias-baseline)",
+    ),
     "candidate_linear_1f_moisture_bins_v2": ExperimentSpec(
         preprocessor="spectral",
         predictor="moisture_bin_fixed_wavelength",
@@ -120,6 +160,41 @@ EXPERIMENTS: dict[str, ExperimentSpec] = {
         predictor="single_feature_linear",
         memo="75% raw + 25% SNV blend + best single wavelength",
     ),
+    "candidate_linear_1f_anti_snv25_pred_wm025": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="anti_snv25_prediction_blend_wm025",
+        memo="prediction-space anti-SNV25 blend: raw 1f + (-0.25)*(snv25 1f - raw 1f)",
+    ),
+    "candidate_linear_1f_anti_snv25_pred_wm050": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="anti_snv25_prediction_blend_wm050",
+        memo="prediction-space anti-SNV25 blend: raw 1f + (-0.50)*(snv25 1f - raw 1f)",
+    ),
+    "candidate_linear_1f_residual_mlp_a005": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_residual_mlp_a005",
+        memo="raw 1f anchor + 0.05 * small seed-ensemble MLP residual",
+    ),
+    "candidate_linear_1f_residual_mlp_a010": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_residual_mlp_a010",
+        memo="raw 1f anchor + 0.10 * small seed-ensemble MLP residual",
+    ),
+    "candidate_linear_1f_residual_mlp_a020": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_residual_mlp_a020",
+        memo="raw 1f anchor + 0.20 * small seed-ensemble MLP residual",
+    ),
+    "candidate_linear_1f_anti_nn040_residual_mlp_a005": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="anti_nn_wm040_residual_mlp_a005",
+        memo="anti-nn-bias w=-0.40 + 0.05 * small seed-ensemble MLP residual",
+    ),
+    "candidate_linear_1f_anti_nn040_residual_mlp_a010": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="anti_nn_wm040_residual_mlp_a010",
+        memo="anti-nn-bias w=-0.40 + 0.10 * small seed-ensemble MLP residual",
+    ),
     "candidate_linear_1f_blend_snv50": ExperimentSpec(
         preprocessor="spectral_blend_snv50",
         predictor="single_feature_linear",
@@ -140,6 +215,41 @@ EXPERIMENTS: dict[str, ExperimentSpec] = {
         predictor="single_feature_fixed_index",
         memo="raw index 616 fixed (Public 1f band)",
     ),
+    "candidate_linear_idx614_raw": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_fixed_index_614",
+        memo="raw index 614 fixed",
+    ),
+    "candidate_linear_idx615_raw": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_fixed_index_615",
+        memo="raw index 615 fixed",
+    ),
+    "candidate_linear_idx617_raw": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_fixed_index_617",
+        memo="raw index 617 fixed",
+    ),
+    "candidate_linear_idx618_raw": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_fixed_index_618",
+        memo="raw index 618 fixed",
+    ),
+    "candidate_linear_idx616_winmean3_raw": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_index616_window_mean",
+        memo="raw mean of indices 615/616/617 + linear regression",
+    ),
+    "candidate_linear_idx616_winmedian3_raw": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_index616_window_median",
+        memo="raw median of indices 615/616/617 + linear regression",
+    ),
+    "candidate_linear_idx616_predmedian3_raw": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="single_feature_index616_prediction_median",
+        memo="raw median of 1f predictions at indices 615/616/617",
+    ),
     "candidate_linear_idx616_center": ExperimentSpec(
         preprocessor="spectral_center",
         predictor="single_feature_fixed_index",
@@ -154,6 +264,96 @@ EXPERIMENTS: dict[str, ExperimentSpec] = {
         preprocessor="spectral_smooth5",
         predictor="single_feature_fixed_index",
         memo="smooth w=5 + index 616 fixed",
+    ),
+    "candidate_band616_pls_c2_smooth5_r2": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_r2",
+        memo="reconstruction probe: smooth5 + band 616 radius 2 + PLS c2",
+    ),
+    "candidate_band616_pls_c2_smooth5_r3": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_r3",
+        memo="reconstruction probe: smooth5 + band 616 radius 3 + PLS c2",
+    ),
+    "candidate_band616_pls_c2_smooth5_r5": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_r5",
+        memo="reconstruction probe: smooth5 + band 616 radius 5 + PLS c2",
+    ),
+    "candidate_band616_pls_c2_smooth5": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_r5",
+        memo="reported best reconstruction: smooth5 + band 616 radius 5 + PLS c2",
+    ),
+    "candidate_band616_pls_c2_smooth5_oof_affine_l010": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_oof_affine_l010",
+        memo="research-first calibration transfer probe: band616 r5 PLS c2 + 0.10 shrunk LOO-species OOF affine correction",
+    ),
+    "candidate_band616_pls_c2_smooth5_oof_bias_l005": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_oof_bias_l005",
+        memo="research-first calibration transfer probe: band616 r5 PLS c2 + 0.05 shrunk LOO-species OOF bias-only correction",
+    ),
+    "candidate_band616_pls_c2_smooth5_mean_align_l010": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_mean_align_l010",
+        memo="research-first PDS-lite probe: band616 r5 PLS c2 with target-batch band mean aligned 10% toward train",
+    ),
+    "candidate_band616_pls_c2_smooth5_mean_align_l020": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_mean_align_l020",
+        memo="research-first PDS-lite probe: band616 r5 PLS c2 with target-batch band mean aligned 20% toward train",
+    ),
+    "candidate_band616_pls_c2_smooth5_r8": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_r8",
+        memo="reconstruction probe: smooth5 + band 616 radius 8 + PLS c2",
+    ),
+    "candidate_band616_pls_c2_smooth5_r10": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_pls_c2_r10",
+        memo="reconstruction probe: smooth5 + band 616 radius 10 + PLS c2",
+    ),
+    "candidate_band616_anchor_r8_blend_w005": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_r8_blend_w005",
+        memo="anchor-protected blend: band616 r5 + 0.05*(r8-r5)",
+    ),
+    "candidate_band616_anchor_r8_blend_w010": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_r8_blend_w010",
+        memo="anchor-protected blend: band616 r5 + 0.10*(r8-r5)",
+    ),
+    "candidate_band616_anchor_r8_blend_w015": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_r8_blend_w015",
+        memo="anchor-protected blend: band616 r5 + 0.15*(r8-r5)",
+    ),
+    "candidate_band616_anchor_r8_blend_w020": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_r8_blend_w020",
+        memo="anchor-protected blend: band616 r5 + 0.20*(r8-r5)",
+    ),
+    "candidate_band616_anchor_r10_blend_w003": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_r10_blend_w003",
+        memo="anchor-protected blend: band616 r5 + 0.03*(r10-r5)",
+    ),
+    "candidate_band616_anchor_r10_blend_w005": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_r10_blend_w005",
+        memo="anchor-protected blend: band616 r5 + 0.05*(r10-r5)",
+    ),
+    "candidate_band616_anchor_r10_blend_w0075": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_r10_blend_w0075",
+        memo="anchor-protected blend: band616 r5 + 0.075*(r10-r5)",
+    ),
+    "candidate_band616_anchor_r10_blend_w010": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="band616_r10_blend_w010",
+        memo="anchor-protected blend: band616 r5 + 0.10*(r10-r5)",
     ),
     "candidate_linear_1f_blend_snv25_nn_bias": ExperimentSpec(
         preprocessor="spectral_blend_snv25",

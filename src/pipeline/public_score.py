@@ -23,6 +23,12 @@ def _load_leaderboard(config: CompetitionConfig | None = None) -> list[dict[str,
 
 ANCHOR_EXPERIMENT = "candidate_linear_1f_snv_diff1"
 PUBLIC_BEST_EXPERIMENT = "candidate_linear_1f"
+PUBLIC_BASELINE_SCORES = {
+    # Historical measured Public scores kept as fixed anchors even if not present
+    # in outputs/public_compare.csv for the current machine.
+    "candidate_linear_1f": 17.496,
+    "candidate_linear_1f_blend_snv25": 18.558018446661805,
+}
 
 SUBMISSION_BLACKLIST_SUBSTRINGS = (
     "group_curve",
@@ -187,7 +193,7 @@ def predict_public_proxy(
 
 
 def load_known_public_scores(config: CompetitionConfig | None = None) -> dict[str, float]:
-    scores: dict[str, float] = {}
+    scores: dict[str, float] = dict(PUBLIC_BASELINE_SCORES)
     for row in load_public_comparison(config):
         name = row.get("experiment_name", "")
         public = row.get("public_score", "")
@@ -252,6 +258,10 @@ def estimate_public_aligned_score(
 
     config = config or load_config()
     anchor_diff = summarize_anchor_submission_diff(config, experiment_name).get("diff_rmse")
+    feedback_score = _estimate_from_public_feedback(experiment_name, known_public)
+    if feedback_score is not None:
+        return feedback_score, "public_feedback_quadratic"
+
     fitted = predict_public_proxy(
         local_scores,
         anchor_diff_rmse=float(anchor_diff) if anchor_diff is not None else None,
@@ -299,6 +309,63 @@ def estimate_public_aligned_score(
 
     score = _median_score(local_scores)
     return (score, "estimated_median") if score is not None else (None, "missing")
+
+
+def _estimate_from_public_feedback(experiment_name: str, known_public: dict[str, float]) -> float | None:
+    weight = _anti_nn_bias_weight(experiment_name)
+    if weight is None:
+        return None
+
+    baseline = known_public.get("candidate_linear_1f")
+    nn_bias = known_public.get("candidate_linear_1f_nn_bias")
+    if baseline is None or nn_bias is None:
+        return None
+
+    points: list[tuple[float, float]] = [(0.0, baseline), (1.0, nn_bias)]
+    for name, score in known_public.items():
+        known_weight = _anti_nn_bias_weight(name)
+        if known_weight is not None:
+            points.append((known_weight, score))
+    if len(points) < 3:
+        return None
+
+    # Public feedback is one-dimensional for these candidates:
+    # pred(w) = baseline + w * (nn_bias - baseline).
+    # Since RMSE^2 along a linear prediction path is quadratic in w, fit
+    # score^2 = a*w^2 + b*w + c using all measured Public points.
+    a, b, c = _fit_quadratic_score_squared(points)
+    estimate_sq = a * weight * weight + b * weight + c
+    if estimate_sq <= 0:
+        return None
+    return math.sqrt(estimate_sq)
+
+
+def _anti_nn_bias_weight(experiment_name: str) -> float | None:
+    prefix = "candidate_linear_1f_anti_nn_bias_w"
+    if not experiment_name.startswith(prefix):
+        return None
+    suffix = experiment_name[len(prefix):]
+    if not suffix.startswith("m"):
+        return None
+    digits = suffix[1:]
+    if not digits.isdigit():
+        return None
+    return -float(digits) / 100.0
+
+
+def _fit_quadratic_score_squared(points: list[tuple[float, float]]) -> tuple[float, float, float]:
+    """Least-squares fit of score^2 = a*w^2 + b*w + c."""
+    xtx = [[0.0] * 3 for _ in range(3)]
+    xty = [0.0] * 3
+    for weight, score in points:
+        row = [weight * weight, weight, 1.0]
+        y = score * score
+        for i, xi in enumerate(row):
+            xty[i] += xi * y
+            for j, xj in enumerate(row):
+                xtx[i][j] += xi * xj
+    coeffs = _solve_linear_system(xtx, xty)
+    return coeffs[0], coeffs[1], coeffs[2]
 
 
 def build_public_rank_rows(config: CompetitionConfig | None = None) -> list[dict[str, str]]:

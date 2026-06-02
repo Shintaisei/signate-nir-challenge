@@ -1,5 +1,6 @@
 # 認証情報（絶対にコミットしない）
-config.py
+/config.py
+/config.json
 .env
 .env.*
 

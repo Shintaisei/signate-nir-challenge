@@ -1,4 +1,4 @@
-"""test樹種をスペクトル類似のtrain樹種に写像し、その樹種専用1波長モデルで予測する。"""
+"""Nearest-train-species based predictors."""
 
 from __future__ import annotations
 
@@ -6,6 +6,10 @@ import math
 
 from pipeline.models.single_feature_linear import _fit_1d_linear, _select_top1_index
 from pipeline.types import Matrix, Rows, Vector
+
+
+def _species_key(row: dict[str, str]) -> str:
+    return str(row.get("species", row.get("樹種", row.get("讓ｹ遞ｮ", ""))))
 
 
 class NearestTrainSpeciesLinearPredictor:
@@ -24,7 +28,7 @@ class NearestTrainSpeciesLinearPredictor:
 
     def fit(self, X: Matrix, y: Vector) -> None:
         if self._train_rows is None:
-            raise RuntimeError("set_train_context() を fit 前に呼んでください")
+            raise RuntimeError("set_train_context() must be called before fit")
         self._y_min = min(y)
         self._y_max = max(y)
         self._models = {}
@@ -32,7 +36,7 @@ class NearestTrainSpeciesLinearPredictor:
 
         by_species: dict[str, list[int]] = {}
         for i, row in enumerate(self._train_rows):
-            by_species.setdefault(str(row["樹種"]), []).append(i)
+            by_species.setdefault(_species_key(row), []).append(i)
 
         for species, indices in by_species.items():
             X_sub = [X[i] for i in indices]
@@ -46,7 +50,7 @@ class NearestTrainSpeciesLinearPredictor:
     def set_test_rows(self, test_rows: Rows, X_test: Matrix) -> None:
         grouped: dict[str, list[int]] = {}
         for i, row in enumerate(test_rows):
-            grouped.setdefault(str(row["樹種"]), []).append(i)
+            grouped.setdefault(_species_key(row), []).append(i)
         centroids: dict[str, Vector] = {}
         for species, indices in grouped.items():
             centroids[species] = _mean_row([X_test[i] for i in indices])
@@ -57,7 +61,7 @@ class NearestTrainSpeciesLinearPredictor:
         self.set_test_rows(test_rows, X_test)
         out: Vector = []
         for row, features in zip(test_rows, X_test):
-            test_species = str(row["樹種"])
+            test_species = _species_key(row)
             train_species = self._test_to_train.get(test_species)
             if train_species is None or train_species not in self._models:
                 train_species = next(iter(self._models))
@@ -67,7 +71,7 @@ class NearestTrainSpeciesLinearPredictor:
         return out
 
     def predict(self, X: Matrix) -> Vector:
-        raise RuntimeError("predict_test(test_rows, X_test) を使用してください")
+        raise RuntimeError("use predict_test(test_rows, X_test)")
 
 
 def _mean_row(rows: Matrix) -> Vector:
@@ -96,7 +100,7 @@ def _cosine(a: Vector, b: Vector) -> float:
 
 
 class NearestTrainSpeciesBiasCorrectedPredictor:
-    """1f 線形 + test樹種の最近傍 train 樹種における平均残差補正。"""
+    """Single-feature linear baseline with nearest-train-species residual bias correction."""
 
     name = "nearest_train_species_bias_corrected"
 
@@ -116,7 +120,7 @@ class NearestTrainSpeciesBiasCorrectedPredictor:
 
     def fit(self, X: Matrix, y: Vector) -> None:
         if self._train_rows is None:
-            raise RuntimeError("set_train_context() を fit 前に呼んでください")
+            raise RuntimeError("set_train_context() must be called before fit")
         self._y_min = min(y)
         self._y_max = max(y)
         self._linear.fit(X, y)
@@ -124,7 +128,7 @@ class NearestTrainSpeciesBiasCorrectedPredictor:
 
         by_species: dict[str, list[int]] = {}
         for i, row in enumerate(self._train_rows):
-            by_species.setdefault(str(row["樹種"]), []).append(i)
+            by_species.setdefault(_species_key(row), []).append(i)
 
         self._species_bias = {}
         self._train_centroids = {}
@@ -136,7 +140,7 @@ class NearestTrainSpeciesBiasCorrectedPredictor:
     def set_test_rows(self, test_rows: Rows, X_test: Matrix) -> None:
         grouped: dict[str, list[int]] = {}
         for i, row in enumerate(test_rows):
-            grouped.setdefault(str(row["樹種"]), []).append(i)
+            grouped.setdefault(_species_key(row), []).append(i)
         for test_species, indices in grouped.items():
             centroid = _mean_row([X_test[i] for i in indices])
             self._test_to_train[test_species] = _nearest_train_species(centroid, self._train_centroids)
@@ -146,11 +150,144 @@ class NearestTrainSpeciesBiasCorrectedPredictor:
         preds = self._linear.predict(X_test)
         out: Vector = []
         for row, pred in zip(test_rows, preds):
-            train_sp = self._test_to_train.get(str(row["樹種"]), "")
+            train_sp = self._test_to_train.get(_species_key(row), "")
             bias = self._species_bias.get(train_sp, 0.0)
             value = pred + bias
             out.append(min(max(value, self._y_min), self._y_max))
         return out
 
     def predict(self, X: Matrix) -> Vector:
-        raise RuntimeError("predict_test(test_rows, X_test) を使用してください")
+        raise RuntimeError("use predict_test(test_rows, X_test)")
+
+
+class _SingleFeatureAntiNnBiasBlendPredictor:
+    """baseline_1f + w * (nn_bias - baseline_1f) with configurable w."""
+
+    name = "single_feature_anti_nn_bias_blend"
+    blend_weight = -0.25
+
+    def __init__(self) -> None:
+        from pipeline.models.single_feature_linear import SingleFeatureLinearPredictor
+
+        self._baseline = SingleFeatureLinearPredictor()
+        self._nn_bias = NearestTrainSpeciesBiasCorrectedPredictor()
+        self._y_min: float = 0.0
+        self._y_max: float = 0.0
+
+    def set_train_context(self, train_rows: Rows, config) -> None:
+        self._nn_bias.set_train_context(train_rows, config)
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        self._y_min = min(y)
+        self._y_max = max(y)
+        self._baseline.fit(X, y)
+        self._nn_bias.fit(X, y)
+
+    def predict_test(self, test_rows: Rows, X_test: Matrix) -> Vector:
+        baseline_pred = self._baseline.predict(X_test)
+        nn_bias_pred = self._nn_bias.predict_test(test_rows, X_test)
+        out: Vector = []
+        for base, nn in zip(baseline_pred, nn_bias_pred):
+            value = base + self.blend_weight * (nn - base)
+            out.append(min(max(value, self._y_min), self._y_max))
+        return out
+
+    def predict(self, X: Matrix) -> Vector:
+        raise RuntimeError("use predict_test(test_rows, X_test)")
+
+
+class SingleFeatureAntiNnBiasBlendWm025Predictor(_SingleFeatureAntiNnBiasBlendPredictor):
+    name = "single_feature_anti_nn_bias_blend_wm025"
+    blend_weight = -0.25
+
+
+class SingleFeatureAntiNnBiasBlendWm035Predictor(_SingleFeatureAntiNnBiasBlendPredictor):
+    name = "single_feature_anti_nn_bias_blend_wm035"
+    blend_weight = -0.35
+
+
+class SingleFeatureAntiNnBiasBlendWm040Predictor(_SingleFeatureAntiNnBiasBlendPredictor):
+    name = "single_feature_anti_nn_bias_blend_wm040"
+    blend_weight = -0.40
+
+
+class SingleFeatureAntiNnBiasBlendWm045Predictor(_SingleFeatureAntiNnBiasBlendPredictor):
+    name = "single_feature_anti_nn_bias_blend_wm045"
+    blend_weight = -0.45
+
+
+class SingleFeatureAntiNnBiasBlendWm050Predictor(_SingleFeatureAntiNnBiasBlendPredictor):
+    name = "single_feature_anti_nn_bias_blend_wm050"
+    blend_weight = -0.5
+
+
+class SingleFeatureAntiNnBiasBlendWm075Predictor(_SingleFeatureAntiNnBiasBlendPredictor):
+    name = "single_feature_anti_nn_bias_blend_wm075"
+    blend_weight = -0.75
+
+
+class _SingleFeatureAntiNnBiasAntiSnvBlendPredictor:
+    """Combine the validated anti-nn-bias direction with anti-SNV25."""
+
+    name = "single_feature_anti_nn_bias_anti_snv_blend"
+    nn_weight = -0.40
+    snv_weight = -0.25
+
+    def __init__(self) -> None:
+        from pipeline.models.single_feature_linear import SingleFeatureLinearPredictor
+
+        self._baseline = SingleFeatureLinearPredictor()
+        self._nn_bias = NearestTrainSpeciesBiasCorrectedPredictor()
+        self._snv25 = SingleFeatureLinearPredictor()
+        self._prep_snv25 = None
+        self._train_rows = None
+        self._config = None
+
+    def set_train_context(self, train_rows: Rows, config) -> None:
+        self._train_rows = train_rows
+        self._config = config
+        self._nn_bias.set_train_context(train_rows, config)
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        if self._train_rows is None or self._config is None:
+            raise RuntimeError("set_train_context() must be called before fit")
+        from pipeline.preprocessors import get_preprocessor
+
+        self._baseline.fit(X, y)
+        self._nn_bias.fit(X, y)
+        self._prep_snv25 = get_preprocessor("spectral_blend_snv25")
+        self._prep_snv25.fit(
+            self._train_rows,
+            target_col=self._config.target_col,
+            meta_cols=self._config.meta_cols,
+        )
+        X_snv25, y_snv25 = self._prep_snv25.transform_train(self._train_rows)
+        self._snv25.fit(X_snv25, y_snv25)
+
+    def predict_test(self, test_rows: Rows, X_test: Matrix) -> Vector:
+        if self._prep_snv25 is None:
+            raise RuntimeError("fit() must be called before predict_test")
+        baseline_pred = self._baseline.predict(X_test)
+        nn_bias_pred = self._nn_bias.predict_test(test_rows, X_test)
+        X_snv25 = self._prep_snv25.transform_test(test_rows)
+        snv25_pred = self._snv25.predict(X_snv25)
+        out: Vector = []
+        for base, nn, snv in zip(baseline_pred, nn_bias_pred, snv25_pred):
+            value = base + self.nn_weight * (nn - base) + self.snv_weight * (snv - base)
+            out.append(value)
+        return out
+
+    def predict(self, X: Matrix) -> Vector:
+        raise RuntimeError("use predict_test(test_rows, X_test)")
+
+
+class SingleFeatureAntiNnWm040AntiSnvWm025Predictor(_SingleFeatureAntiNnBiasAntiSnvBlendPredictor):
+    name = "single_feature_anti_nn_wm040_anti_snv_wm025"
+    nn_weight = -0.40
+    snv_weight = -0.25
+
+
+class SingleFeatureAntiNnWm040AntiSnvWm050Predictor(_SingleFeatureAntiNnBiasAntiSnvBlendPredictor):
+    name = "single_feature_anti_nn_wm040_anti_snv_wm050"
+    nn_weight = -0.40
+    snv_weight = -0.50

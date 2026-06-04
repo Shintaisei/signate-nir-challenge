@@ -22,7 +22,7 @@ def _load_leaderboard(config: CompetitionConfig | None = None) -> list[dict[str,
     return load_leaderboard(config)
 
 ANCHOR_EXPERIMENT = "candidate_linear_1f_snv_diff1"
-PUBLIC_BEST_EXPERIMENT = "candidate_linear_1f"
+PUBLIC_BEST_EXPERIMENT = "candidate_band616_pls_c2_smooth5"
 PUBLIC_BASELINE_SCORES = {
     # Historical measured Public scores kept as fixed anchors even if not present
     # in outputs/public_compare.csv for the current machine.

@@ -70,13 +70,13 @@ def compute_row_composite_metrics(
     )
 
     species_shift = (
-        local_scores.get("leave_one_species")
-        or local_scores.get("moisture_quantile")
+        local_scores.get("group_species")
+        or local_scores.get("leave_one_species")
         or local_scores.get("repeated_leave_one_species")
     )
     if species_shift is None and cv_strategy in {
+        "group_species",
         "leave_one_species",
-        "moisture_quantile",
         "repeated_leave_one_species",
     }:
         species_shift = mean_score
@@ -137,8 +137,8 @@ def enrich_experiment_composite(
     )
 
     species_shift = (
-        local_scores.get("leave_one_species")
-        or local_scores.get("moisture_quantile")
+        local_scores.get("group_species")
+        or local_scores.get("leave_one_species")
         or local_scores.get("repeated_leave_one_species")
     )
     worst = _worst_species_from_leaderboard(config, experiment_name)

@@ -785,6 +785,81 @@ EXPERIMENTS: dict[str, ExperimentSpec] = {
         predictor="pca50_ridge_alpha100",
         memo="PCA(50) + Ridge alpha=100 + SNV",
     ),
+    "candidate_multiview_pca25_ridge100": ExperimentSpec(
+        preprocessor="spectral_multiview",
+        predictor="pca25_ridge_alpha100",
+        memo="full raw spectrum + smooth3/smooth5/center/SNV/padded diff views; PCA(25) + Ridge alpha=100",
+    ),
+    "candidate_multiview_pca50_ridge100": ExperimentSpec(
+        preprocessor="spectral_multiview",
+        predictor="pca50_ridge_alpha100",
+        memo="full raw spectrum + smooth3/smooth5/center/SNV/padded diff views; PCA(50) + Ridge alpha=100",
+    ),
+    "candidate_multiview_pca100_ridge300": ExperimentSpec(
+        preprocessor="spectral_multiview",
+        predictor="pca100_ridge_alpha300",
+        memo="full raw spectrum + smooth3/smooth5/center/SNV/padded diff views; PCA(100) + Ridge alpha=300",
+    ),
+    "candidate_multiview_pca150_ridge1000": ExperimentSpec(
+        preprocessor="spectral_multiview",
+        predictor="pca150_ridge_alpha1000",
+        memo="full raw spectrum + smooth3/smooth5/center/SNV/padded diff views; PCA(150) + Ridge alpha=1000",
+    ),
+    "candidate_raw_pca50_ridge100": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="pca50_ridge_alpha100",
+        memo="full raw spectrum baseline; PCA(50) + Ridge alpha=100",
+    ),
+    "candidate_smooth5_pca50_ridge100": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="pca50_ridge_alpha100",
+        memo="smooth5 full spectrum baseline; PCA(50) + Ridge alpha=100",
+    ),
+    "candidate_raw_gauss_pca25_ridge300": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="gauss_pca25_ridge_alpha300",
+        memo="full raw spectrum; quantile gaussianization + PCA(25) + Ridge alpha=300",
+    ),
+    "candidate_raw_gauss_pca50_ridge300": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="gauss_pca50_ridge_alpha300",
+        memo="full raw spectrum; quantile gaussianization + PCA(50) + Ridge alpha=300",
+    ),
+    "candidate_multiview_gauss_pca50_ridge300": ExperimentSpec(
+        preprocessor="spectral_multiview",
+        predictor="gauss_pca50_ridge_alpha300",
+        memo="full raw + smooth/center/SNV/diff views; quantile gaussianization + PCA(50) + Ridge alpha=300",
+    ),
+    "candidate_multiview_gauss_pca100_ridge1000": ExperimentSpec(
+        preprocessor="spectral_multiview",
+        predictor="gauss_pca100_ridge_alpha1000",
+        memo="full raw + smooth/center/SNV/diff views; quantile gaussianization + PCA(100) + Ridge alpha=1000",
+    ),
+    "candidate_raw_window10pca1_ridge300": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="window_pca10_c1_ridge_alpha300",
+        memo="raw full spectrum split into 10-wavelength windows; PCA(1) per window + Ridge alpha=300",
+    ),
+    "candidate_raw_window10pca1_ridge1000": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="window_pca10_c1_ridge_alpha1000",
+        memo="raw full spectrum split into 10-wavelength windows; PCA(1) per window + Ridge alpha=1000",
+    ),
+    "candidate_raw_window10pca2_ridge1000": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="window_pca10_c2_ridge_alpha1000",
+        memo="raw full spectrum split into 10-wavelength windows; PCA(2) per window + Ridge alpha=1000",
+    ),
+    "candidate_smooth5_window10pca1_ridge1000": ExperimentSpec(
+        preprocessor="spectral_smooth5",
+        predictor="window_pca10_c1_ridge_alpha1000",
+        memo="smooth5 full spectrum split into 10-wavelength windows; PCA(1) per window + Ridge alpha=1000",
+    ),
+    "candidate_raw_window20pca1_ridge1000": ExperimentSpec(
+        preprocessor="spectral",
+        predictor="window_pca20_c1_ridge_alpha1000",
+        memo="raw full spectrum split into 20-wavelength windows; PCA(1) per window + Ridge alpha=1000",
+    ),
     "svr_rbf_snv": ExperimentSpec(
         preprocessor="spectral_snv",
         predictor="svr_rbf_c10",

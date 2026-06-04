@@ -9,6 +9,7 @@ from pipeline.preprocessors.spectral_transforms import (
     SpectralL2NormPreprocessor,
     SpectralDiff2Preprocessor,
     SpectralMscPreprocessor,
+    SpectralMultiviewPreprocessor,
     SpectralSgDiff1Preprocessor,
     SpectralSmoothDiff1Preprocessor,
     SpectralSmooth3Preprocessor,
@@ -50,6 +51,7 @@ PREPROCESSOR_REGISTRY: dict[str, type] = {
     "spectral_snv_area_diff1": SpectralSnvAreaDiff1Preprocessor,
     "spectral_detrend": SpectralDetrendPreprocessor,
     "spectral_msc": SpectralMscPreprocessor,
+    "spectral_multiview": SpectralMultiviewPreprocessor,
 }
 
 

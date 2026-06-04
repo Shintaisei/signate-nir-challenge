@@ -278,6 +278,17 @@ class SpectralMscPreprocessor(SpectralPreprocessor):
         return _msc(super().transform_test(test), self._reference)
 
 
+class SpectralMultiviewPreprocessor(SpectralPreprocessor):
+    name = "spectral_multiview"
+
+    def transform_train(self, train: Rows) -> tuple[Matrix, Vector]:
+        X, y = super().transform_train(train)
+        return _multiview(X), y
+
+    def transform_test(self, test: Rows) -> Matrix:
+        return _multiview(super().transform_test(test))
+
+
 def _center(X: Matrix) -> Matrix:
     out: Matrix = []
     for row in X:
@@ -315,6 +326,36 @@ def _snv(X: Matrix) -> Matrix:
 
 def _diff(X: Matrix) -> Matrix:
     return [[row[i + 1] - row[i] for i in range(len(row) - 1)] for row in X]
+
+
+def _diff_padded(X: Matrix) -> Matrix:
+    return [[0.0, *[row[i + 1] - row[i] for i in range(len(row) - 1)]] for row in X]
+
+
+def _diff2_padded(X: Matrix) -> Matrix:
+    return [
+        [0.0, 0.0, *[row[i + 2] - 2.0 * row[i + 1] + row[i] for i in range(len(row) - 2)]]
+        for row in X
+    ]
+
+
+def _multiview(X: Matrix) -> Matrix:
+    views = [
+        X,
+        _moving_average(X, window=3),
+        _moving_average(X, window=5),
+        _center(X),
+        _snv(X),
+        _diff_padded(X),
+        _diff2_padded(X),
+    ]
+    out: Matrix = []
+    for rows in zip(*views):
+        merged: list[float] = []
+        for row in rows:
+            merged.extend(row)
+        out.append(merged)
+    return out
 
 
 def _append_group_position(X: Matrix, rows: Rows) -> Matrix:

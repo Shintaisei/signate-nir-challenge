@@ -138,6 +138,210 @@ class PcaRidgeC50Predictor(SklearnPredictor):
         return make_pipeline(StandardScaler(), PCA(n_components=50, random_state=42), Ridge(alpha=100.0))
 
 
+class PcaRidgePredictor(SklearnPredictor):
+    n_components: int = 50
+    alpha: float = 100.0
+
+    def _build_model(self):
+        from sklearn.decomposition import PCA
+        from sklearn.linear_model import Ridge
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        return make_pipeline(
+            StandardScaler(),
+            PCA(n_components=self.n_components, random_state=42),
+            Ridge(alpha=self.alpha),
+        )
+
+
+class GaussianPcaRidgePredictor(PcaRidgePredictor):
+    def _build_model(self):
+        from sklearn.decomposition import PCA
+        from sklearn.linear_model import Ridge
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import QuantileTransformer, StandardScaler
+
+        return make_pipeline(
+            QuantileTransformer(
+                n_quantiles=1000,
+                output_distribution="normal",
+                random_state=42,
+            ),
+            StandardScaler(),
+            PCA(n_components=self.n_components, random_state=42),
+            Ridge(alpha=self.alpha),
+        )
+
+
+class Pca25RidgeAlpha100Predictor(PcaRidgePredictor):
+    name = "pca25_ridge_alpha100"
+    n_components = 25
+    alpha = 100.0
+
+
+class Pca25RidgeAlpha300Predictor(PcaRidgePredictor):
+    name = "pca25_ridge_alpha300"
+    n_components = 25
+    alpha = 300.0
+
+
+class Pca25RidgeAlpha1000Predictor(PcaRidgePredictor):
+    name = "pca25_ridge_alpha1000"
+    n_components = 25
+    alpha = 1000.0
+
+
+class Pca50RidgeAlpha300Predictor(PcaRidgePredictor):
+    name = "pca50_ridge_alpha300"
+    n_components = 50
+    alpha = 300.0
+
+
+class Pca50RidgeAlpha1000Predictor(PcaRidgePredictor):
+    name = "pca50_ridge_alpha1000"
+    n_components = 50
+    alpha = 1000.0
+
+
+class Pca100RidgeAlpha100Predictor(PcaRidgePredictor):
+    name = "pca100_ridge_alpha100"
+    n_components = 100
+    alpha = 100.0
+
+
+class Pca100RidgeAlpha300Predictor(PcaRidgePredictor):
+    name = "pca100_ridge_alpha300"
+    n_components = 100
+    alpha = 300.0
+
+
+class Pca100RidgeAlpha1000Predictor(PcaRidgePredictor):
+    name = "pca100_ridge_alpha1000"
+    n_components = 100
+    alpha = 1000.0
+
+
+class Pca150RidgeAlpha100Predictor(PcaRidgePredictor):
+    name = "pca150_ridge_alpha100"
+    n_components = 150
+    alpha = 100.0
+
+
+class Pca150RidgeAlpha300Predictor(PcaRidgePredictor):
+    name = "pca150_ridge_alpha300"
+    n_components = 150
+    alpha = 300.0
+
+
+class Pca150RidgeAlpha1000Predictor(PcaRidgePredictor):
+    name = "pca150_ridge_alpha1000"
+    n_components = 150
+    alpha = 1000.0
+
+
+class GaussianPca25RidgeAlpha300Predictor(GaussianPcaRidgePredictor):
+    name = "gauss_pca25_ridge_alpha300"
+    n_components = 25
+    alpha = 300.0
+
+
+class GaussianPca50RidgeAlpha300Predictor(GaussianPcaRidgePredictor):
+    name = "gauss_pca50_ridge_alpha300"
+    n_components = 50
+    alpha = 300.0
+
+
+class GaussianPca100RidgeAlpha1000Predictor(GaussianPcaRidgePredictor):
+    name = "gauss_pca100_ridge_alpha1000"
+    n_components = 100
+    alpha = 1000.0
+
+
+class WindowPcaRidgePredictor:
+    name = "window_pca_ridge"
+
+    window: int = 10
+    components_per_window: int = 1
+    alpha: float = 300.0
+
+    def __init__(self) -> None:
+        self._blocks: list[tuple[int, int, object]] = []
+        self._model = None
+        self._y_min = 0.0
+        self._y_max = 0.0
+
+    def fit(self, X: Matrix, y: Vector) -> None:
+        _require_sklearn()
+        from sklearn.decomposition import PCA
+        from sklearn.linear_model import Ridge
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        if not X:
+            raise ValueError("WindowPcaRidgePredictor requires non-empty X")
+        n_features = len(X[0])
+        self._blocks = []
+        transformed_blocks: list[list[list[float]]] = []
+        for start in range(0, n_features, self.window):
+            end = min(start + self.window, n_features)
+            width = end - start
+            if width <= 0:
+                continue
+            n_components = min(self.components_per_window, width)
+            block_model = make_pipeline(
+                StandardScaler(),
+                PCA(n_components=n_components, random_state=42),
+            )
+            X_block = [row[start:end] for row in X]
+            block_features = block_model.fit_transform(X_block)
+            self._blocks.append((start, end, block_model))
+            transformed_blocks.append(_matrix_from_array(block_features))
+
+        X_transformed = _hstack_blocks(transformed_blocks)
+        self._model = make_pipeline(StandardScaler(), Ridge(alpha=self.alpha))
+        self._model.fit(X_transformed, y)
+        self._y_min = min(y)
+        self._y_max = max(y)
+
+    def predict(self, X: Matrix) -> Vector:
+        if self._model is None:
+            raise RuntimeError("fit() must be called before predict()")
+        transformed_blocks: list[list[list[float]]] = []
+        for start, end, block_model in self._blocks:
+            transformed_blocks.append(_matrix_from_array(block_model.transform([row[start:end] for row in X])))
+        pred = [float(value) for value in self._model.predict(_hstack_blocks(transformed_blocks))]
+        return [min(max(value, self._y_min), self._y_max) for value in pred]
+
+
+class WindowPca10C1RidgeAlpha300Predictor(WindowPcaRidgePredictor):
+    name = "window_pca10_c1_ridge_alpha300"
+    window = 10
+    components_per_window = 1
+    alpha = 300.0
+
+
+class WindowPca10C1RidgeAlpha1000Predictor(WindowPcaRidgePredictor):
+    name = "window_pca10_c1_ridge_alpha1000"
+    window = 10
+    components_per_window = 1
+    alpha = 1000.0
+
+
+class WindowPca10C2RidgeAlpha1000Predictor(WindowPcaRidgePredictor):
+    name = "window_pca10_c2_ridge_alpha1000"
+    window = 10
+    components_per_window = 2
+    alpha = 1000.0
+
+
+class WindowPca20C1RidgeAlpha1000Predictor(WindowPcaRidgePredictor):
+    name = "window_pca20_c1_ridge_alpha1000"
+    window = 20
+    components_per_window = 1
+    alpha = 1000.0
+
+
 class SvrRbfC10Predictor(SklearnPredictor):
     name = "svr_rbf_c10"
 
@@ -519,4 +723,20 @@ def _flatten(values) -> list[float]:
             out.append(float(value[0]))
         else:
             out.append(float(value))
+    return out
+
+
+def _matrix_from_array(values) -> Matrix:
+    return [[float(value) for value in row] for row in values]
+
+
+def _hstack_blocks(blocks: list[Matrix]) -> Matrix:
+    if not blocks:
+        return []
+    out: Matrix = []
+    for rows in zip(*blocks):
+        merged: list[float] = []
+        for row in rows:
+            merged.extend(row)
+        out.append(merged)
     return out

@@ -8,7 +8,7 @@ score while keeping submission cost under control.
 | Role | Model | Purpose | Writes code? |
 | --- | --- | --- | --- |
 | Research Agent | `gpt-5.5`, medium | Find similar NIR / wood moisture / chemometrics work and convert it into experiment ideas. | No |
-| Plan Agent | `gpt-5.5`, medium | Interpret local results, research, and Public-history constraints; choose the next experiment. | No |
+| Plan Agent | `gpt-5.5`, high | Interpret local results, research, and Public-history constraints; choose the next experiment. | No |
 | Executor Agent | `gpt-5.3-codex`, medium | Implement one narrow experiment and run local checks. | Yes |
 | Review Agent | `gpt-5.3-codex`, medium | Check whether implementation matches intent and whether metrics/submission format are valid. | No, unless explicitly asked |
 
@@ -243,7 +243,7 @@ Agentmemory under project signate-nir-challenge.
 
 ```text
 You are the Plan Agent for signate-nir-challenge.
-Model: gpt-5.5, reasoning medium.
+Model: gpt-5.5, reasoning high.
 
 Goal: convert research, Public feedback, and experiment logs into one narrow
 Executor task.
@@ -327,7 +327,7 @@ Save review findings to Agentmemory and list blockers first.
 ## Sub-Agent Spawn Mapping
 
 - Research: `spawn_agent(model="gpt-5.5", reasoning_effort="medium")`
-- Plan: `spawn_agent(model="gpt-5.5", reasoning_effort="medium")`
+- Plan: `spawn_agent(model="gpt-5.5", reasoning_effort="high")`
 - Executor: `spawn_agent(agent_type="worker", model="gpt-5.3-codex", reasoning_effort="medium")`
 - Review: `spawn_agent(model="gpt-5.3-codex", reasoning_effort="medium")`
 

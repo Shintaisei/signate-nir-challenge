@@ -1,6 +1,7 @@
 # 認証情報（絶対にコミットしない）
 /config.py
 /config.json
+/.kaggle_tmp_*/
 .env
 .env.*
 

@@ -23,7 +23,7 @@ import pandas as pd
 from scipy.signal import savgol_filter
 from sklearn.decomposition import PCA
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.linear_model import ARDRegression, BayesianRidge, HuberRegressor, Ridge
+from sklearn.linear_model import ARDRegression, BayesianRidge, HuberRegressor, Ridge, TweedieRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GroupKFold, KFold
 from sklearn.preprocessing import PowerTransformer, QuantileTransformer, StandardScaler
@@ -179,6 +179,14 @@ EXPERIMENTS: dict[str, ExperimentSpec] = {
         sg_window=9,
         pca_components=20,
         ridge_alpha=3500.0,
+    ),
+    "nir_ms_target_yeojohnson_ridge3600": ExperimentSpec(
+        name="nir_ms_target_yeojohnson_ridge3600",
+        family="target_transform",
+        transform="target_yeojohnson",
+        sg_window=9,
+        pca_components=20,
+        ridge_alpha=3600.0,
     ),
     "nir_msc_pca20_ridge2500": ExperimentSpec(
         name="nir_msc_pca20_ridge2500",
@@ -465,6 +473,34 @@ def msc_transform(X: np.ndarray, reference: np.ndarray) -> np.ndarray:
             slope = 1.0
         out[i] = (row - intercept) / slope
     return out
+
+
+def emsc_lite_pair(
+    X_train: np.ndarray,
+    X_test: np.ndarray,
+    *,
+    degree: int = 1,
+) -> tuple[np.ndarray, np.ndarray]:
+    reference = X_train.mean(axis=0)
+    return (
+        emsc_lite_transform(X_train, reference, degree=degree),
+        emsc_lite_transform(X_test, reference, degree=degree),
+    )
+
+
+def emsc_lite_transform(X: np.ndarray, reference: np.ndarray, *, degree: int) -> np.ndarray:
+    if degree < 0:
+        raise ValueError("EMSC-lite degree must be non-negative")
+    grid = np.linspace(-1.0, 1.0, X.shape[1])
+    baseline_terms = [np.ones_like(grid)]
+    for power in range(1, degree + 1):
+        baseline_terms.append(grid**power)
+    design = np.vstack([reference, *baseline_terms]).T
+    coef, *_ = np.linalg.lstsq(design, X.T, rcond=None)
+    scale = coef[0]
+    scale = np.where(np.abs(scale) < 1e-12, 1.0, scale)
+    baseline = np.vstack(baseline_terms).T @ coef[1:]
+    return ((X.T - baseline) / scale).T
 
 
 def fit_predict_pca_ridge(
@@ -821,7 +857,7 @@ def build_model_search_candidates(data: dict[str, object], out_dir: Path) -> Non
             pred = fit_predict_target_transform(Xtr, y, Xte, alpha=alpha, target=target)
             add_candidate(name, pred, "target_transform", f"SG9+SNV PCA20 Ridge alpha={alpha:g} target={target}")
 
-    for alpha in [2900.0, 3000.0, 3100.0, 3200.0, 3300.0, 3400.0]:
+    for alpha in [2900.0, 3000.0, 3100.0, 3200.0, 3300.0, 3400.0, 3500.0, 3600.0, 3700.0]:
         for target in ["log1p", "boxcox", "yeojohnson"]:
             for n_components in [15, 18, 20, 22]:
                 name = f"nir_ms_target2_{target}_pca{n_components}_ridge{int(alpha)}"
@@ -839,6 +875,81 @@ def build_model_search_candidates(data: dict[str, object], out_dir: Path) -> Non
                     "target_transform_fine",
                     f"SG9+SNV PCA{n_components} Ridge alpha={alpha:g} target={target}",
                 )
+
+    Xtr_sg = savgol(
+        X_train,
+        ExperimentSpec(
+            name="emsc_lite_sg9",
+            family="emsc_lite",
+            transform="sg_snv",
+            sg_window=9,
+            pca_components=20,
+            ridge_alpha=3400.0,
+        ),
+    )
+    Xte_sg = savgol(
+        X_test,
+        ExperimentSpec(
+            name="emsc_lite_sg9",
+            family="emsc_lite",
+            transform="sg_snv",
+            sg_window=9,
+            pca_components=20,
+            ridge_alpha=3400.0,
+        ),
+    )
+    for degree in [1, 2]:
+        Xtr_emsc, Xte_emsc = emsc_lite_pair(Xtr_sg, Xte_sg, degree=degree)
+        for use_snv, suffix in [(False, "raw"), (True, "snv")]:
+            Xtr_emsc_model = snv(Xtr_emsc) if use_snv else Xtr_emsc
+            Xte_emsc_model = snv(Xte_emsc) if use_snv else Xte_emsc
+            for alpha in [3400.0, 3500.0, 3600.0]:
+                for n_components in [18, 20, 22]:
+                    name = f"nir_ms_emsc{degree}_{suffix}_target_yeojohnson_pca{n_components}_ridge{int(alpha)}"
+                    pred = fit_predict_target_transform(
+                        Xtr_emsc_model,
+                        y,
+                        Xte_emsc_model,
+                        alpha=alpha,
+                        target="yeojohnson",
+                        n_components=n_components,
+                    )
+                    add_candidate(
+                        name,
+                        pred,
+                        "emsc_lite_target",
+                        f"SG9+EMSC-lite degree={degree} suffix={suffix} PCA{n_components} Ridge alpha={alpha:g} target=yeojohnson",
+                    )
+
+    for target in ["yeojohnson", "boxcox"]:
+        lambdas = [-0.10, -0.05, 0.0, 0.03, 0.047, 0.07, 0.10, 0.15, 0.20]
+        if target == "boxcox":
+            lambdas = [-0.05, 0.0, 0.05, 0.092, 0.12, 0.16, 0.20]
+        for lam in lambdas:
+            lam_tag = f"{lam:+.3f}".replace("+", "p").replace("-", "m").replace(".", "p")
+            for alpha in [3300.0, 3400.0, 3500.0, 3600.0]:
+                name = f"nir_ms_manual_{target}_lam{lam_tag}_pca20_ridge{int(alpha)}"
+                pred = fit_predict_manual_power_target(
+                    Xtr,
+                    y,
+                    Xte,
+                    alpha=alpha,
+                    target=target,
+                    lam=lam,
+                    n_components=20,
+                )
+                add_candidate(
+                    name,
+                    pred,
+                    "manual_power_target",
+                    f"SG9+SNV PCA20 Ridge alpha={alpha:g} target={target} lambda={lam:g}",
+                )
+
+    for power in [1.5, 1.75, 2.0, 2.5, 3.0]:
+        for alpha in [0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0]:
+            name = f"nir_ms_tweedie_p{str(power).replace('.', 'p')}_a{str(alpha).replace('.', 'p')}"
+            pred = fit_predict_tweedie_pcr(Xtr, y, Xte, power=power, alpha=alpha, n_components=20)
+            add_candidate(name, pred, "positive_glm", f"SG9+SNV PCA20 Tweedie power={power:g} alpha={alpha:g}")
 
     for n_components in [15, 20, 25]:
         for whiten in [False, True]:
@@ -954,6 +1065,83 @@ def fit_predict_target_transform(
     model = Ridge(alpha=alpha)
     model.fit(Z_train, yt)
     return np.asarray(inverse(model.predict(Z_test)), dtype=float)
+
+
+def fit_predict_manual_power_target(
+    X_train: np.ndarray,
+    y: np.ndarray,
+    X_test: np.ndarray,
+    *,
+    alpha: float,
+    target: str,
+    lam: float,
+    n_components: int,
+) -> np.ndarray:
+    pca = PCA(n_components=n_components, random_state=42)
+    Z_train = pca.fit_transform(X_train)
+    Z_test = pca.transform(X_test)
+
+    yt = manual_power_transform_y(y, target=target, lam=lam)
+    yt_mean = float(np.mean(yt))
+    yt_std = float(np.std(yt))
+    if yt_std == 0:
+        yt_std = 1.0
+    yt_scaled = (yt - yt_mean) / yt_std
+
+    model = Ridge(alpha=alpha)
+    model.fit(Z_train, yt_scaled)
+    pred_t = model.predict(Z_test) * yt_std + yt_mean
+    return manual_power_inverse_y(pred_t, target=target, lam=lam)
+
+
+def manual_power_transform_y(y: np.ndarray, *, target: str, lam: float) -> np.ndarray:
+    y = np.asarray(y, dtype=float)
+    if target == "yeojohnson":
+        if abs(lam) < 1e-12:
+            return np.log1p(y)
+        return (np.power(y + 1.0, lam) - 1.0) / lam
+    if target == "boxcox":
+        if np.any(y <= 0):
+            raise ValueError("Box-Cox target transform requires positive y")
+        if abs(lam) < 1e-12:
+            return np.log(y)
+        return (np.power(y, lam) - 1.0) / lam
+    raise ValueError(f"unknown manual power target: {target}")
+
+
+def manual_power_inverse_y(z: np.ndarray, *, target: str, lam: float) -> np.ndarray:
+    z = np.asarray(z, dtype=float)
+    if target == "yeojohnson":
+        if abs(lam) < 1e-12:
+            return np.expm1(z)
+        base = np.maximum(lam * z + 1.0, 1e-12)
+        return np.power(base, 1.0 / lam) - 1.0
+    if target == "boxcox":
+        if abs(lam) < 1e-12:
+            return np.exp(z)
+        base = np.maximum(lam * z + 1.0, 1e-12)
+        return np.power(base, 1.0 / lam)
+    raise ValueError(f"unknown manual power target: {target}")
+
+
+def fit_predict_tweedie_pcr(
+    X_train: np.ndarray,
+    y: np.ndarray,
+    X_test: np.ndarray,
+    *,
+    power: float,
+    alpha: float,
+    n_components: int,
+) -> np.ndarray:
+    pca = PCA(n_components=n_components, random_state=42)
+    Z_train = pca.fit_transform(X_train)
+    Z_test = pca.transform(X_test)
+    scaler = StandardScaler()
+    Z_train = scaler.fit_transform(Z_train)
+    Z_test = scaler.transform(Z_test)
+    model = TweedieRegressor(power=power, alpha=alpha, link="log", max_iter=5000, tol=1e-7)
+    model.fit(Z_train, y)
+    return np.asarray(model.predict(Z_test), dtype=float)
 
 
 def fit_predict_structured_pcr(

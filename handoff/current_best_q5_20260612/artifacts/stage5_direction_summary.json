@@ -1,0 +1,488 @@
+{
+  "q5_changed_count": 22,
+  "changed_any_count": 58,
+  "never_changed_count": 492,
+  "q5_changed_detector_mean": 0.4946804106640172,
+  "never_changed_detector_top_mean_20": 0.9045309653916211,
+  "q5_changed_species_counts": {
+    "2": 5,
+    "7": 5,
+    "6": 4,
+    "10": 4,
+    "9": 3,
+    "18": 1
+  },
+  "detector_abs_q5_corr": -0.006701217171879187,
+  "component_corr_with_detector": {
+    "q5_abs_diff": -0.006701217171879175,
+    "pca_q_resid": 0.8044464468382844,
+    "knn_dist": 0.6772854992894868,
+    "lof_score": 0.39907716824888795,
+    "isoforest_score": 0.9097107657499632,
+    "detector_score": 1.0
+  },
+  "top_uncorrected_species_counts_top50": [
+    {
+      "species_number": 6,
+      "species": "ケヤキ",
+      "n": 10
+    },
+    {
+      "species_number": 10,
+      "species": "チーク",
+      "n": 40
+    }
+  ],
+  "top_uncorrected_cluster_counts_top50": [
+    {
+      "test_cluster64": 17,
+      "n": 21
+    },
+    {
+      "test_cluster64": 61,
+      "n": 15
+    },
+    {
+      "test_cluster64": 37,
+      "n": 8
+    },
+    {
+      "test_cluster64": 6,
+      "n": 4
+    },
+    {
+      "test_cluster64": 7,
+      "n": 2
+    }
+  ],
+  "changed_detector_summary": [
+    {
+      "changed_any": false,
+      "q5_changed": false,
+      "n": 492,
+      "detector_mean": 0.5051035141498956,
+      "detector_median": 0.5742258652094717,
+      "detector_p90": 0.774954462659381,
+      "q5_abs_mean": 0.0
+    },
+    {
+      "changed_any": true,
+      "q5_changed": false,
+      "n": 36,
+      "detector_mean": 0.43350283343452745,
+      "detector_median": 0.3180783242258652,
+      "detector_p90": 0.8030510018214936,
+      "q5_abs_mean": 9.868649107779169e-17
+    },
+    {
+      "changed_any": true,
+      "q5_changed": true,
+      "n": 22,
+      "detector_mean": 0.49468041066401724,
+      "detector_median": 0.5182149362477231,
+      "detector_p90": 0.8468579234972679,
+      "q5_abs_mean": 0.07568670956756533
+    }
+  ],
+  "top_pred_bins_by_detector": [
+    {
+      "pred_bin": "(11.307, 11.615]",
+      "n": 55,
+      "changed_any_rate": 0.03636363636363636,
+      "q5_changed_rate": 0.0,
+      "detector_mean": 0.66023348236463,
+      "detector_max": 0.7336065573770492,
+      "pred_min": 11.308120081846216,
+      "pred_max": 11.60875677769514
+    },
+    {
+      "pred_bin": "(14.695, 17.12]",
+      "n": 55,
+      "changed_any_rate": 0.16363636363636364,
+      "q5_changed_rate": 0.07272727272727272,
+      "detector_mean": 0.6400149031296573,
+      "detector_max": 0.9216757741347905,
+      "pred_min": 14.704747319208964,
+      "pred_max": 17.077078861573067
+    },
+    {
+      "pred_bin": "(11.615, 12.758]",
+      "n": 55,
+      "changed_any_rate": 0.03636363636363636,
+      "q5_changed_rate": 0.01818181818181818,
+      "detector_mean": 0.624126511011757,
+      "detector_max": 0.8442622950819672,
+      "pred_min": 11.615441905868598,
+      "pred_max": 12.743965015280663
+    },
+    {
+      "pred_bin": "(12.758, 14.695]",
+      "n": 55,
+      "changed_any_rate": 0.01818181818181818,
+      "q5_changed_rate": 0.0,
+      "detector_mean": 0.6211458850803113,
+      "detector_max": 0.8132969034608378,
+      "pred_min": 12.761588678103829,
+      "pred_max": 14.67073763908576
+    },
+    {
+      "pred_bin": "(17.12, 20.2]",
+      "n": 55,
+      "changed_any_rate": 0.01818181818181818,
+      "q5_changed_rate": 0.0,
+      "detector_mean": 0.613404537175029,
+      "detector_max": 0.9289617486338798,
+      "pred_min": 17.147821201356837,
+      "pred_max": 20.134331791794786
+    }
+  ],
+  "top_uncorrected_detector_rows": [
+    {
+      "row": 469,
+      "sample_number": 949,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 17.62804478687321,
+      "detector_score": 0.9289617486338798,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.725311624241257,
+      "knn_dist": 16.780681260477493,
+      "lof_score": 2.680928359287907,
+      "isoforest_score": 0.5500767541044864
+    },
+    {
+      "row": 468,
+      "sample_number": 948,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 17.874154677660464,
+      "detector_score": 0.9225865209471766,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.715881771939456,
+      "knn_dist": 16.70816069790471,
+      "lof_score": 2.6645755407491576,
+      "isoforest_score": 0.5490994027793503
+    },
+    {
+      "row": 474,
+      "sample_number": 954,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 16.9978647038123,
+      "detector_score": 0.9216757741347905,
+      "test_cluster64": 17,
+      "pca_q_resid": 5.662166867521424,
+      "knn_dist": 16.657525345007862,
+      "lof_score": 2.5264476759030376,
+      "isoforest_score": 0.5514533657619158
+    },
+    {
+      "row": 463,
+      "sample_number": 943,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 18.71006225221325,
+      "detector_score": 0.9166666666666666,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.820365165443999,
+      "knn_dist": 16.71058362472045,
+      "lof_score": 2.6603080265941084,
+      "isoforest_score": 0.5453879983938482
+    },
+    {
+      "row": 475,
+      "sample_number": 955,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 16.771756823900095,
+      "detector_score": 0.9157559198542806,
+      "test_cluster64": 17,
+      "pca_q_resid": 5.665813752486979,
+      "knn_dist": 16.58878556494124,
+      "lof_score": 2.4508739055183537,
+      "isoforest_score": 0.5509297564136011
+    },
+    {
+      "row": 467,
+      "sample_number": 947,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 18.115498021893995,
+      "detector_score": 0.9134790528233152,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.753402989319178,
+      "knn_dist": 16.427934643907506,
+      "lof_score": 2.6188237800713736,
+      "isoforest_score": 0.5491389291489769
+    },
+    {
+      "row": 465,
+      "sample_number": 945,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 18.353497920286955,
+      "detector_score": 0.9134790528233151,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.787202865999013,
+      "knn_dist": 16.544666055198235,
+      "lof_score": 2.6360944154387185,
+      "isoforest_score": 0.5467907367138143
+    },
+    {
+      "row": 472,
+      "sample_number": 952,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 17.30508346153158,
+      "detector_score": 0.9130236794171219,
+      "test_cluster64": 17,
+      "pca_q_resid": 5.752920191262375,
+      "knn_dist": 16.379999698301212,
+      "lof_score": 2.618116906100495,
+      "isoforest_score": 0.5503805919719416
+    },
+    {
+      "row": 477,
+      "sample_number": 957,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 16.54787209289056,
+      "detector_score": 0.9107468123861566,
+      "test_cluster64": 17,
+      "pca_q_resid": 5.4216507535202965,
+      "knn_dist": 16.754499629079245,
+      "lof_score": 2.4773280472119596,
+      "isoforest_score": 0.5526767783914637
+    },
+    {
+      "row": 462,
+      "sample_number": 942,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 18.983078909701256,
+      "detector_score": 0.9084699453551912,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.6128190331071295,
+      "knn_dist": 16.559852117597142,
+      "lof_score": 2.7084565608828446,
+      "isoforest_score": 0.5449276122952618
+    },
+    {
+      "row": 461,
+      "sample_number": 941,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 19.10565312821833,
+      "detector_score": 0.9043715846994536,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.652450803939168,
+      "knn_dist": 16.56069879441883,
+      "lof_score": 2.706465336762674,
+      "isoforest_score": 0.5427863076824906
+    },
+    {
+      "row": 471,
+      "sample_number": 951,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 17.495688356258732,
+      "detector_score": 0.9043715846994536,
+      "test_cluster64": 17,
+      "pca_q_resid": 5.638633392481466,
+      "knn_dist": 16.199806477833267,
+      "lof_score": 2.5899404864880022,
+      "isoforest_score": 0.5493556201395655
+    },
+    {
+      "row": 476,
+      "sample_number": 956,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 16.66298524106528,
+      "detector_score": 0.9034608378870673,
+      "test_cluster64": 17,
+      "pca_q_resid": 5.484062269276098,
+      "knn_dist": 16.67985079921138,
+      "lof_score": 2.4652473664774157,
+      "isoforest_score": 0.5466104829118338
+    },
+    {
+      "row": 464,
+      "sample_number": 944,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 18.66282531692121,
+      "detector_score": 0.9030054644808744,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.693735954886461,
+      "knn_dist": 16.473367834386597,
+      "lof_score": 2.62304785204246,
+      "isoforest_score": 0.544835049748975
+    },
+    {
+      "row": 458,
+      "sample_number": 938,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 20.02959021112298,
+      "detector_score": 0.9002732240437159,
+      "test_cluster64": 61,
+      "pca_q_resid": 5.523510875040453,
+      "knn_dist": 16.52759122334169,
+      "lof_score": 2.9250815453398817,
+      "isoforest_score": 0.5416142061092015
+    }
+  ],
+  "top_q5_rows": [
+    {
+      "row": 1,
+      "sample_number": 96,
+      "species_number": 2,
+      "species": "クスノキ",
+      "stage3_pred": 100.52695641621344,
+      "q5_diff": 0.13451166429634043,
+      "detector_score": 0.4039162112932605,
+      "changed_count": 5
+    },
+    {
+      "row": 96,
+      "sample_number": 479,
+      "species_number": 6,
+      "species": "ケヤキ",
+      "stage3_pred": 95.36036204706852,
+      "q5_diff": 0.11401139332123478,
+      "detector_score": 0.6548269581056466,
+      "changed_count": 5
+    },
+    {
+      "row": 2,
+      "sample_number": 97,
+      "species_number": 2,
+      "species": "クスノキ",
+      "stage3_pred": 99.69202249706716,
+      "q5_diff": 0.10450349805758208,
+      "detector_score": 0.3633879781420766,
+      "changed_count": 1
+    },
+    {
+      "row": 161,
+      "sample_number": 544,
+      "species_number": 7,
+      "species": "スギ",
+      "stage3_pred": 111.06375284532426,
+      "q5_diff": 0.09862620324064153,
+      "detector_score": 0.6197632058287796,
+      "changed_count": 5
+    },
+    {
+      "row": 160,
+      "sample_number": 543,
+      "species_number": 7,
+      "species": "スギ",
+      "stage3_pred": 123.83683651071908,
+      "q5_diff": 0.09336133851431327,
+      "detector_score": 0.5660291438979964,
+      "changed_count": 1
+    },
+    {
+      "row": 97,
+      "sample_number": 480,
+      "species_number": 6,
+      "species": "ケヤキ",
+      "stage3_pred": 91.64706406077164,
+      "q5_diff": 0.08780405235980027,
+      "detector_score": 0.644808743169399,
+      "changed_count": 1
+    },
+    {
+      "row": 351,
+      "sample_number": 831,
+      "species_number": 9,
+      "species": "タモ",
+      "stage3_pred": 123.94270953361833,
+      "q5_diff": 0.08708954594646912,
+      "detector_score": 0.127959927140255,
+      "changed_count": 4
+    },
+    {
+      "row": 0,
+      "sample_number": 95,
+      "species_number": 2,
+      "species": "クスノキ",
+      "stage3_pred": 140.6426517591979,
+      "q5_diff": 0.08619926867794447,
+      "detector_score": 0.24544626593806923,
+      "changed_count": 2
+    },
+    {
+      "row": 166,
+      "sample_number": 549,
+      "species_number": 7,
+      "species": "スギ",
+      "stage3_pred": 87.9957878927921,
+      "q5_diff": 0.07866771093902969,
+      "detector_score": 0.6657559198542806,
+      "changed_count": 4
+    },
+    {
+      "row": 356,
+      "sample_number": 836,
+      "species_number": 9,
+      "species": "タモ",
+      "stage3_pred": 85.7164970513358,
+      "q5_diff": 0.07275075208522708,
+      "detector_score": 0.27003642987249543,
+      "changed_count": 2
+    },
+    {
+      "row": 168,
+      "sample_number": 551,
+      "species_number": 7,
+      "species": "スギ",
+      "stage3_pred": 84.83409061797177,
+      "q5_diff": 0.07100253556770042,
+      "detector_score": 0.5200364298724954,
+      "changed_count": 4
+    },
+    {
+      "row": 169,
+      "sample_number": 552,
+      "species_number": 7,
+      "species": "スギ",
+      "stage3_pred": 83.26255287978998,
+      "q5_diff": 0.06630477253740708,
+      "detector_score": 0.5163934426229508,
+      "changed_count": 1
+    },
+    {
+      "row": 479,
+      "sample_number": 959,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 16.387049674667807,
+      "q5_diff": -0.06173942352899431,
+      "detector_score": 0.8538251366120219,
+      "changed_count": 2
+    },
+    {
+      "row": 482,
+      "sample_number": 962,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 16.077111290304394,
+      "q5_diff": -0.06172295475532508,
+      "detector_score": 0.8474499089253188,
+      "changed_count": 3
+    },
+    {
+      "row": 480,
+      "sample_number": 960,
+      "species_number": 10,
+      "species": "チーク",
+      "stage3_pred": 16.25422770417831,
+      "q5_diff": -0.06139828348253218,
+      "detector_score": 0.8542805100182149,
+      "changed_count": 1
+    }
+  ]
+}

@@ -28,6 +28,7 @@
 | --- | --- |
 | `README.md` | 最初に読む概要 |
 | `BEST_SCORE_REPRODUCTION.md` | 最高スコア q5 の再現情報、コマンド、検証 |
+| `INTERNAL_EVALUATION_GUIDE.md` | 内部評価の考え方、CV/OOF/anchor drift/q5 gate の使い分け |
 | `EXPERIMENT_HISTORY_CONDENSED.md` | これまでの探索を圧縮した履歴 |
 | `CURRENT_DIRECTION_AND_NEXT_ACTIONS.md` | 今やるべき方向性とレビュー基準 |
 | `REVIEW_LOG.md` | レビューエージェントの厳しめレビュー記録 |
@@ -37,6 +38,9 @@
 | `artifacts/tomorrow_5queue_public_results_20260609.csv` | q1-q5 の Public 結果 |
 | `artifacts/tomorrow_5queue_manifest_20260608.csv` | q1-q5 生成時の候補マニフェスト |
 | `artifacts/stage5_q5_candidate_manifest_20260609.csv` | q5 以後の Stage5 候補マニフェスト |
+| `artifacts/stage5_direction_summary.json` | q5 後 detector / changed-row 診断の要約 |
+| `artifacts/top_uncorrected_detector_species.csv` | detector 上位未補正 rows の species 集計 |
+| `artifacts/top_uncorrected_detector_clusters.csv` | detector 上位未補正 rows の cluster 集計 |
 
 ## 固定コピーの検証値
 

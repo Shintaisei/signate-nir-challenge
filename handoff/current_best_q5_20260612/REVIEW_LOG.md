@@ -64,3 +64,48 @@ Final pass notes:
 - script SHA256 一致: `81B9508A89104C52F6B38E19E1F6FFDDD8D2967BAD23480F0E268A732C4E143D`。
 - q5 CSV SHA256 一致: `FD7EAE6611396E6EFAFCE5602D80882B2C61F194E95883D935F3694B5AC258E4`。
 - `run_reproduce_q5_pool.ps1`: syntax ok。
+
+## Review pass 4: internal evaluation guide
+
+Status: failed, fixed
+
+Reviewer: `Nietzsche`
+
+Should fix:
+
+- q5 gate の列対応がなく、`stage5_q5_candidate_manifest_20260609.csv` のどの列を見るかが曖昧。
+- pseudo-test simulation の作り方と失敗扱いが薄い。
+- detector の実行元スクリプトと出力先が明記されていない。
+
+Fix applied:
+
+- `INTERNAL_EVALUATION_GUIDE.md` を追加し、local CV / OOF / anchor drift / q5 gate / target-domain simulation / detector / Public history の役割分担を整理した。
+- q5 gate と `stage5_q5_candidate_manifest_20260609.csv` の列対応表を追加した。
+- pseudo-test simulation の手順、出力、失敗扱いを追加した。
+- detector 診断の実行元 `scripts/nir_stage5_direction_diagnostics.py` と handoff artifacts / repo outputs の対応を追加した。
+- `stage5_direction_summary.json`、`top_uncorrected_detector_species.csv`、`top_uncorrected_detector_clusters.csv` を artifacts に追加した。
+
+## Review pass 5: internal evaluation guide final
+
+Status: passed
+
+Reviewer: `Nietzsche`
+
+Blocker:
+
+- なし。
+
+Should fix:
+
+- なし。
+
+Nice-to-have applied:
+
+- `q5 corr` 表記を `q5 increment corr` に寄せた。
+- pseudo-test gap は絶対値だけでなく view 間の相対順位と worst-case gap を見る、と追記した。
+
+Final pass notes:
+
+- local CV / OOF / anchor drift / q5 gate / target-domain simulation / detector / Public history の役割分担は説明済み。
+- q5 gate 列対応、pseudo-test 手順、detector 実行元と artifact 対応により、運用の再現性は実用水準。
+- `stage5_direction_summary.json` は parse 可能で、`q5_changed_count=22`、`changed_any_count=58`、`never_changed_count=492`、`detector_abs_q5_corr=-0.006701...` がガイド記述と整合。

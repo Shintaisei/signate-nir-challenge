@@ -11,6 +11,8 @@ Public = 13.922966797992677
 
 次の改善は、q5 の再増幅ではなく、q5 が説明できていない hard rows を見つけて小さく補正する方向です。
 
+内部評価の詳しい考え方は `INTERNAL_EVALUATION_GUIDE.md` を参照してください。要点は、local CV を最終 ranker にせず、q5 anchor からの差分、OOF delta、q5 overlap、species concentration、Public history を合わせて候補を落とすことです。
+
 ## 今やっている修正方向
 
 ### 1. q5 anchor residual search
@@ -76,7 +78,7 @@ Public = 13.922966797992677
    - negative predictions = 0
    - diff RMSE / max diff vs q5
    - changed rows and q5_new rows
-   - q5 corr and q5 overlap
+   - q5 increment corr and q5 overlap
    - species shift and top10 species max
    - OOF delta vs q5
    - candidate が q5 の単純増幅ではないこと
